@@ -4,7 +4,7 @@ import './App.css'
 import { Route, Routes } from 'react-router-dom'
 import RoomPage from './pages/RoomPage'
 import { io } from 'socket.io-client'
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
 const server = "http://localhost:5000";
 const connectionOptions = {
