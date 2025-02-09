@@ -19,11 +19,13 @@ const socket = io(server, connectionOptions);
 const App = () => {
 
   const [user, setUser] = useState(null);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     socket.on("userJoined", (data) => {
       if(data.success){
-        console.log("iserJoined", data);
+        console.log("userJoined", data);
+        setUsers(data.users); 
       }else{
         console.log("userJoined error");
       }
@@ -40,7 +42,7 @@ const App = () => {
     <div className='container'>
       <Routes>
         <Route path="/" element={<Forms uuid={uuid} socket={socket} setUser={setUser}/>} />
-        <Route path="/room/:roomId" element={<RoomPage />} />
+        <Route path="/room/:roomId" element={<RoomPage user={user} socket={socket} users={users} />}/>
       </Routes>
     </div>
   )

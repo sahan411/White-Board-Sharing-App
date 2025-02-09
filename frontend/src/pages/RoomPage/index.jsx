@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 import "./index.css"
 import WhiteBoard from '../../components/Whiteboard'
 
-const RoomPage = () => {
+const RoomPage = (user, socket, users) => {
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
     const [tool, setTool] = useState("pencil");
@@ -30,8 +30,10 @@ const RoomPage = () => {
     }
     return (
         <div className='row'>
-            <h1 className='text-center my-4'>White Board Sharing App <span className='text-primary'>[Users Online : 0] </span></h1>
-            <div className='d-flex align-items-center justify-content-center gap-5 my-3'>
+            <h1 className='text-center my-4'>White Board Sharing App <span className='text-primary'>[Users Online : {users.length}] </span></h1>
+            {
+                user && user.presenter && (
+                    <div className='d-flex align-items-center justify-content-center gap-5 my-3'>
                 {/* Tools Section */}
                 <div className='d-flex align-items-center gap-2'>
                     <div className='d-flex align-items-center gap-3'>
@@ -93,6 +95,9 @@ const RoomPage = () => {
                 </div>
                     <button className='btn btn-danger' onClick={handleClearCanvas}>Clear Canvas</button>
                 </div>
+                )
+            }
+            
             <div className="col-md-10 mx-auto mt-4 canvas-box">
             <WhiteBoard 
                 canvasRef={canvasRef} 
@@ -101,6 +106,9 @@ const RoomPage = () => {
                 setElements={setElements} 
                 tool={tool} 
                 color={color}
+                user={user}
+                socket={socket}
+                users={users}
             />
             </div>
         </div>

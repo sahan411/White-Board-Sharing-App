@@ -17,7 +17,7 @@ const CreateRoomForm = ({ uuid, socket, setUser }) => {
     };
 
     setUser(roomData);
-    navigate(`/${roomId}`);  // Using template literal properly
+    navigate(`/room/${roomId}`);
     console.log(roomData);
     socket.emit("userJoined", roomData);
   };
