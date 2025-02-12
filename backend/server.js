@@ -23,7 +23,8 @@ io.on("connection", (socket) => {
         roomIdGlobal = roomId;
         socket.join(roomId);
         const users = addUser(data);
-        socket.emit("userJoined", { success: true, users});
+        socket.emit("userJoined", { success: true}, users);
+        socket.broadcast.to(roomId).emit("allUsers", { users });
         socket.broadcast.to(roomId).emit("whiteboardDataResponse", { imgURL: imgURLGlobal,});
     });
 
