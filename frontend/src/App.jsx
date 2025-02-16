@@ -1,10 +1,11 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Forms from './components/Forms'
 import './App.css'
-import { Route, Routes } from 'react-router-dom'
+import { data, Route, Routes } from 'react-router-dom'
 import RoomPage from './pages/RoomPage'
 import { io } from 'socket.io-client'
 import { useState, useEffect } from 'react'
+import { toast, ToastContainer } from 'react-toastify'
 
 const server = "http://localhost:5000";
 const connectionOptions = {
@@ -30,10 +31,21 @@ const App = () => {
         console.log("userJoined error");
       }
     });
+    
 
     socket.on("allUsers", (data) => {
-      setUsers(data);
+      setUsers(data.users);
     });
+
+    socket.on("userJoinedMessageBroadcasted", (data) => {
+      //console.log(`${data} joined the room!`);
+      toast.info(`${data} joined the room!`);
+    });   
+
+    socket.on("userLeftMessageBroadcasted", (data) => {
+      //console.log(`${data} left the room!`);
+      toast.info(`${data} left the room!`);
+    })
 
   }, [])
 
@@ -46,6 +58,7 @@ const App = () => {
 
   return (
     <div className='container'>
+      <ToastContainer />
       <Routes>
         <Route path="/" element={<Forms uuid={uuid} socket={socket} setUser={setUser}/>} />
         <Route path="/room/:roomId" element={<RoomPage user={user} socket={socket} users={users} />}/>

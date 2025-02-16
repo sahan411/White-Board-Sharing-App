@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import "./index.css"
 import WhiteBoard from '../../components/Whiteboard'
 
-const RoomPage = (user, socket, users) => {
+const RoomPage = ({ user, socket, users }) => {
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
     const [tool, setTool] = useState("pencil");
@@ -10,6 +10,13 @@ const RoomPage = (user, socket, users) => {
     const [elements, setElements] = useState([]);
     const [history, setHistory] = useState([]);
     const [openedUserTab, setOpenedUserTab] = useState(false);
+
+    useEffect(() => {
+        return () => {
+            socket.emit("userLeft", user);
+        }
+    //here added socket, user
+    }, [socket, user])
 
 
     const undo = () => {
@@ -26,7 +33,8 @@ const RoomPage = (user, socket, users) => {
     const handleClearCanvas = () => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d");
-        ctx.fillRect = "white";
+        //fillRect
+        ctx.fillStyle = "white";
         ctxRef.current.clearRect(0, 0, canvas.width, canvas.height);
         setElements([]);
     }

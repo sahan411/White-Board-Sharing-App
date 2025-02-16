@@ -1,4 +1,3 @@
-import { use } from "react";
 import { useEffect, useState, useLayoutEffect } from "react";
 import rough from "roughjs";
 import { RoughCanvas } from "roughjs/bin/canvas";
@@ -17,11 +16,22 @@ const WhiteBoard = ({
 
     const [img, setImg] = useState(null);
 
+    /*
     useEffect(() => {
         socket.on("whiteboardData", (data) => {
             setImg(data.imgURL);
         });
     }, []);
+    */
+
+    useEffect(() => {
+        // Listen for updated whiteboard image data from the server
+        const whiteboardDataHandler = (data) => {
+          setImg(data.imgURL);
+        };
+        socket.on("whiteboardDataResponse", whiteboardDataHandler);
+        return () => socket.off("whiteboardDataResponse", whiteboardDataHandler);
+      }, [socket]);
     
     if(!user?.presenter){
         return (
@@ -29,11 +39,17 @@ const WhiteBoard = ({
                 className="border border-3 border-dark h-100 w-100 overflow-hidden"
                 >
                     <img src={img} id="img" alt="Real time white board image" 
+                        /*
                         style={{
                             height: window.innerHeight * 2,
                             width: "285%",
                         }
-                        }
+                        }*/
+                        style={{
+                            height: "100%",
+                            width: "100%",
+                            objectFit: "contain"
+                          }}
                     />
                 </div>
         )
@@ -54,10 +70,18 @@ const WhiteBoard = ({
         ctxRef.current = ctx;
     }, []);
 
-    
+    /*
     useEffect(() => {
         ctxRef.current.strokeStyle = color;
     }, [color]);
+    */
+    useEffect(() => {
+        // Update the stroke color when color state changes
+        if (ctxRef.current) {
+          ctxRef.current.strokeStyle = color;
+        }
+    }, [color, ctxRef]);
+
     /*
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -106,12 +130,18 @@ const WhiteBoard = ({
 
                 else if(element.type === "line") {
                     roughCanvas.draw(
-                        roughGenerator.line(element.offsetX, element.offsetY, element.width, element.height)
+                        roughGenerator.line(element.offsetX, element.offsetY, element.width, element.height,
+                            {
+                                stroke: element.stroke,
+                                strokeWidth: 5,
+                                roughness: 0,
+                              }
+                        )
                     );
                 }
             });
-            const canvasImage = canvasRef.current.toDataURL();  
-            socket.emit("whiteboardData", canvasImage);
+        const canvasImage = canvasRef.current.toDataURL();
+        socket.emit("whiteboardData", canvasImage);
         }
     }, [elements]);
 
