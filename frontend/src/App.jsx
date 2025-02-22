@@ -4,8 +4,8 @@ import './App.css'
 import { data, Route, Routes } from 'react-router-dom'
 import RoomPage from './pages/RoomPage'
 import { io } from 'socket.io-client'
-import { useState, useEffect } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
+import { useState, useEffect, useRef } from 'react'
 
 const server = "http://localhost:5000";
 const connectionOptions = {
@@ -18,36 +18,54 @@ const connectionOptions = {
 const socket = io(server, connectionOptions);
 
 const App = () => {
-
+  // Move the hook inside the component
+  const socketWorkerRef = useRef(null);
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    socket.on("userJoined", (data) => {
-      if(data.success){
-        console.log("userJoined", data);
-        setUsers(data.users); 
-      }else{
-        console.log("userJoined error");
-      }
-    });
+    // Initialize socket worker
+    if (typeof window !== 'undefined' && window.Worker) {
+      socketWorkerRef.current = new Worker('/socketWorker.js');
+      
+      socketWorkerRef.current.onmessage = (e) => {
+        const { type, messages } = e.data;
+        
+        if (type === 'processedMessages') {
+          // Process batch of messages
+          messages.forEach(msg => {
+            switch (msg.event) {
+              case 'userJoined':
+                if (msg.data.success) {
+                  setUsers(msg.data.users);
+                }
+                break;
+                
+              case 'allUsers':
+                setUsers(msg.data.users);
+                break;
+                
+              case 'userJoinedMessageBroadcasted':
+                toast.info(`${msg.data} joined the room!`);
+                break;
+                
+              case 'userLeftMessageBroadcasted':
+                toast.info(`${msg.data} left the room!`);
+                break;
+            }
+          });
+        }
+      };
+    }
     
-
-    socket.on("allUsers", (data) => {
-      setUsers(data.users);
-    });
-
-    socket.on("userJoinedMessageBroadcasted", (data) => {
-      //console.log(`${data} joined the room!`);
-      toast.info(`${data} joined the room!`);
-    });   
-
-    socket.on("userLeftMessageBroadcasted", (data) => {
-      //console.log(`${data} left the room!`);
-      toast.info(`${data} left the room!`);
-    })
-
-  }, [])
+    // Clean up
+    return () => {
+      if (socketWorkerRef.current) {
+        socketWorkerRef.current.postMessage({ type: 'stop' });
+        socketWorkerRef.current.terminate();
+      }
+    };
+  }, []);
 
   const uuid = () => {
     let s4 = () =>{
